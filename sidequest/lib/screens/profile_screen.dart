@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = MockData.profileForMember(activeMember);
+    final profile = MockData.profileForMemberUpdated(activeMember);
     final toNextRank = profile.goalXp - profile.currentXp;
 
     return ListView(

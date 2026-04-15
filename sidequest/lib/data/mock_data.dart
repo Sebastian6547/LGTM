@@ -5,6 +5,9 @@ import '../models/sidequest_models.dart';
 
 class MockData {
   static const String roomId = 'apt-17';
+  static bool _questStateInitialized = false;
+  static final List<Quest> _todaysQuestState = [];
+  static final List<Quest> _upcomingQuestState = [];
 
   static const List<LoginAccount> loginAccounts = [
     LoginAccount(
@@ -155,18 +158,22 @@ class MockData {
     ),
   ];
 
-  static const List<Quest> todaysQuests = [
+  static const List<Quest> _initialTodaysQuests = [
     Quest(
       title: 'Clean the Kitchen',
       assignee: 'Maya',
       difficulty: QuestDifficulty.hard,
       rewardXp: 55,
+      createdBy: 'Maya',
+      votes: [QuestVote(memberName: 'Maya', difficulty: QuestDifficulty.hard)],
     ),
     Quest(
       title: 'Take Out Trash',
       assignee: 'Maya',
       difficulty: QuestDifficulty.trivial,
       rewardXp: 10,
+      createdBy: 'Maya',
+      votes: [QuestVote(memberName: 'Maya', difficulty: QuestDifficulty.trivial)],
     ),
     Quest(
       title: 'Vacuum Living Room',
@@ -174,28 +181,36 @@ class MockData {
       difficulty: QuestDifficulty.normal,
       rewardXp: 35,
       isComplete: true,
+      createdBy: 'Alex',
+      votes: [QuestVote(memberName: 'Alex', difficulty: QuestDifficulty.normal)],
     ),
     Quest(
       title: 'Do the Dishes',
       assignee: 'Sam',
       difficulty: QuestDifficulty.easy,
       rewardXp: 20,
+      createdBy: 'Sam',
+      votes: [QuestVote(memberName: 'Sam', difficulty: QuestDifficulty.easy)],
     ),
     Quest(
       title: 'Wipe Down Counters',
       assignee: 'Alex',
       difficulty: QuestDifficulty.easy,
       rewardXp: 20,
+      createdBy: 'Alex',
+      votes: [QuestVote(memberName: 'Alex', difficulty: QuestDifficulty.easy)],
     ),
   ];
 
-  static const List<Quest> upcomingQuests = [
+  static const List<Quest> _initialUpcomingQuests = [
     Quest(
       title: 'Clean Bathroom',
       assignee: 'Maya',
       difficulty: QuestDifficulty.epic,
       rewardXp: 80,
       isLocked: true,
+      createdBy: 'Maya',
+      votes: [QuestVote(memberName: 'Maya', difficulty: QuestDifficulty.epic)],
     ),
     Quest(
       title: 'Mop All Floors',
@@ -203,6 +218,8 @@ class MockData {
       difficulty: QuestDifficulty.hard,
       rewardXp: 55,
       isLocked: true,
+      createdBy: 'Alex',
+      votes: [QuestVote(memberName: 'Alex', difficulty: QuestDifficulty.hard)],
     ),
     Quest(
       title: 'Organize Fridge',
@@ -210,6 +227,8 @@ class MockData {
       difficulty: QuestDifficulty.normal,
       rewardXp: 35,
       isLocked: true,
+      createdBy: 'Sam',
+      votes: [QuestVote(memberName: 'Sam', difficulty: QuestDifficulty.normal)],
     ),
   ];
 
@@ -262,4 +281,96 @@ class MockData {
     QuestDifficulty.hard: 55,
     QuestDifficulty.epic: 80,
   };
+
+  // Mutable member stats tracking
+  static bool _memberStatsInitialized = false;
+  static final Map<String, int> _memberCurrentXp = {};
+  static final Map<String, int> _memberTotalXp = {};
+  static final Map<String, int> _memberQuestsDone = {};
+
+  static void _ensureMemberStatsInitialized() {
+    if (_memberStatsInitialized) {
+      return;
+    }
+
+    // Initialize with mock data values
+    for (final entry in _lifetimeXpByMember.entries) {
+      _memberTotalXp[entry.key] = entry.value;
+    }
+    for (final entry in _questsDoneByMember.entries) {
+      _memberQuestsDone[entry.key] = entry.value;
+    }
+
+    // Initialize current XP based on profiles
+    _memberCurrentXp['Maya'] = 680;
+    _memberCurrentXp['Alex'] = 450;
+    _memberCurrentXp['Sam'] = 320;
+    _memberCurrentXp['Jordan'] = 150;
+
+    _memberStatsInitialized = true;
+  }
+
+  /// Award XP to a member for completing a quest
+  static void awardXpToMember(String memberName, int xpAmount) {
+    _ensureMemberStatsInitialized();
+
+    final normalizedName = memberName.trim();
+
+    // Add to lifetime total
+    _memberTotalXp[normalizedName] =
+        (_memberTotalXp[normalizedName] ?? 0) + xpAmount;
+
+    // Add to current level progress
+    _memberCurrentXp[normalizedName] =
+        (_memberCurrentXp[normalizedName] ?? 0) + xpAmount;
+
+    // Increment quests done
+    _memberQuestsDone[normalizedName] =
+        (_memberQuestsDone[normalizedName] ?? 0) + 1;
+  }
+
+  /// Get current member stats
+  static ProfileStats profileForMemberUpdated(String memberName) {
+    _ensureMemberStatsInitialized();
+
+    final member = roommateByName(memberName);
+    final normalizedName = memberName.trim();
+
+    return ProfileStats(
+      playerName: member.name,
+      role: member.role,
+      rank: member.rank,
+      level: member.level,
+      currentXp: _memberCurrentXp[normalizedName] ?? member.currentXp,
+      goalXp: member.goalXp,
+      totalXp: _memberTotalXp[normalizedName] ?? member.currentXp,
+      questsDone: _memberQuestsDone[normalizedName] ?? member.weeklyQuests,
+      streakDays: member.streak,
+      memberSince: _memberSinceByMember[normalizedName] ?? 'Jan 2026',
+    );
+  }
+
+  static void ensureQuestStateInitialized() {
+    if (_questStateInitialized) {
+      return;
+    }
+
+    _todaysQuestState
+      ..clear()
+      ..addAll(_initialTodaysQuests);
+    _upcomingQuestState
+      ..clear()
+      ..addAll(_initialUpcomingQuests);
+    _questStateInitialized = true;
+  }
+
+  static List<Quest> get todaysQuests {
+    ensureQuestStateInitialized();
+    return _todaysQuestState;
+  }
+
+  static List<Quest> get upcomingQuests {
+    ensureQuestStateInitialized();
+    return _upcomingQuestState;
+  }
 }

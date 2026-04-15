@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
 import '../data/mock_data.dart';
+import 'login_screen.dart';
 import 'party_screen.dart';
 import 'profile_screen.dart';
 import 'quests_screen.dart';
@@ -23,12 +24,28 @@ class _HomeShellState extends State<HomeShell> {
 
   static const _tabs = ['Quests', 'Party', 'Rankings', 'Profile'];
 
+  void _logout() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+    );
+  }
+
+  void _onQuestXpUpdated() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final profile = MockData.profileForMember(widget.activeMember);
+    final profile = MockData.profileForMemberUpdated(widget.activeMember);
 
     final pages = [
-      QuestsScreen(activeMember: widget.activeMember),
+      QuestsScreen(
+        activeMember: widget.activeMember,
+        onXpUpdated: _onQuestXpUpdated,
+      ),
       const PartyScreen(),
       const RankingsScreen(),
       ProfileScreen(activeMember: widget.activeMember),
@@ -103,10 +120,12 @@ class _HomeShellState extends State<HomeShell> {
                             borderRadius: BorderRadius.circular(10),
                             color: AppColors.panel,
                           ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Icon(
-                              Icons.sports_martial_arts,
+                          child: IconButton(
+                            padding: const EdgeInsets.all(8),
+                            constraints: const BoxConstraints(),
+                            onPressed: _logout,
+                            icon: const Icon(
+                              Icons.logout,
                               color: AppColors.neonBlue,
                               size: 18,
                             ),

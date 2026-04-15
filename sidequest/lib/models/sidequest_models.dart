@@ -22,19 +22,63 @@ extension QuestDifficultyLabel on QuestDifficulty {
 class Quest {
   const Quest({
     required this.title,
-    required this.assignee,
     required this.difficulty,
     required this.rewardXp,
+    this.assignee,
+    this.dueDate,
+    this.dueAt,
+    this.createdBy,
+    this.votes = const [],
     this.isComplete = false,
     this.isLocked = false,
   });
 
   final String title;
-  final String assignee;
+  final String? assignee;
   final QuestDifficulty difficulty;
   final int rewardXp;
+  final String? dueDate;
+  final DateTime? dueAt;
+  final String? createdBy;
+  final List<QuestVote> votes;
   final bool isComplete;
   final bool isLocked;
+
+  Quest copyWith({
+    String? title,
+    String? assignee,
+    QuestDifficulty? difficulty,
+    int? rewardXp,
+    String? dueDate,
+    DateTime? dueAt,
+    String? createdBy,
+    List<QuestVote>? votes,
+    bool? isComplete,
+    bool? isLocked,
+  }) {
+    return Quest(
+      title: title ?? this.title,
+      assignee: assignee ?? this.assignee,
+      difficulty: difficulty ?? this.difficulty,
+      rewardXp: rewardXp ?? this.rewardXp,
+      dueDate: dueDate ?? this.dueDate,
+      dueAt: dueAt ?? this.dueAt,
+      createdBy: createdBy ?? this.createdBy,
+      votes: votes ?? this.votes,
+      isComplete: isComplete ?? this.isComplete,
+      isLocked: isLocked ?? this.isLocked,
+    );
+  }
+}
+
+class QuestVote {
+  const QuestVote({
+    required this.memberName,
+    required this.difficulty,
+  });
+
+  final String memberName;
+  final QuestDifficulty difficulty;
 }
 
 class RoommateStats {
