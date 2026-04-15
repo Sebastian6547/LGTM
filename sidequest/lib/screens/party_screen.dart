@@ -6,16 +6,9 @@ import '../models/sidequest_models.dart';
 import '../widgets/neon_panel.dart';
 import '../widgets/xp_bar.dart';
 
-class PartyScreen extends StatefulWidget {
-  const PartyScreen({super.key, this.onXpUpdated});
+class PartyScreen extends StatelessWidget {
+  const PartyScreen({super.key});
 
-  final VoidCallback? onXpUpdated;
-
-  @override
-  State<PartyScreen> createState() => _PartyScreenState();
-}
-
-class _PartyScreenState extends State<PartyScreen> {
   int _fairnessScore(List<int> workloads) {
     if (workloads.isEmpty || workloads.every((value) => value == 0)) {
       return 100;

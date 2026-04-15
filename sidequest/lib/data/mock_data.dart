@@ -78,35 +78,6 @@ class MockData {
     );
   }
 
-  static ProfileStats profileForMember(String memberName) {
-    final member = roommateByName(memberName);
-    return ProfileStats(
-      playerName: member.name,
-      role: member.role,
-      rank: member.rank,
-      level: member.level,
-      currentXp: member.currentXp,
-      goalXp: member.goalXp,
-      totalXp: _lifetimeXpByMember[member.name] ?? member.currentXp,
-      questsDone: _questsDoneByMember[member.name] ?? member.weeklyQuests,
-      streakDays: member.streak,
-      memberSince: _memberSinceByMember[member.name] ?? 'Jan 2026',
-    );
-  }
-
-  static const ProfileStats profile = ProfileStats(
-    playerName: 'Maya',
-    role: 'Apartment Hunter',
-    rank: 'D',
-    level: 12,
-    currentXp: 680,
-    goalXp: 1200,
-    totalXp: 1840,
-    questsDone: 47,
-    streakDays: 6,
-    memberSince: 'Jan 2026',
-  );
-
   static const List<RoommateStats> roommates = [
     RoommateStats(
       name: 'Maya',
@@ -229,48 +200,6 @@ class MockData {
       isLocked: true,
       createdBy: 'Sam',
       votes: [QuestVote(memberName: 'Sam', difficulty: QuestDifficulty.normal)],
-    ),
-  ];
-
-  static const List<Achievement> achievements = [
-    Achievement(
-      title: '7-Day Streak',
-      subtitle: 'Complete quests 7 days in a row',
-      icon: Icons.local_fire_department,
-      color: Color(0xFFFFC940),
-    ),
-    Achievement(
-      title: 'Speed Runner',
-      subtitle: 'Clear all daily quests before noon',
-      icon: Icons.schedule,
-      color: Color(0xFFF8D219),
-    ),
-    Achievement(
-      title: 'Team Player',
-      subtitle: 'Create no carry-overs for 3 weeks',
-      icon: Icons.groups_2_outlined,
-      color: AppColors.neonGreen,
-      unlocked: false,
-    ),
-    Achievement(
-      title: 'Perfect Week',
-      subtitle: '100% completion for 7 days',
-      icon: Icons.star_border,
-      color: AppColors.neonPurple,
-      unlocked: false,
-    ),
-    Achievement(
-      title: 'Rank Up!',
-      subtitle: 'Reach Level 10',
-      icon: Icons.keyboard_arrow_up,
-      color: Color(0xFFFFDB4D),
-    ),
-    Achievement(
-      title: 'Sentinel',
-      subtitle: 'Complete 30 quests total',
-      icon: Icons.emoji_events_outlined,
-      color: AppColors.neonBlue,
-      unlocked: false,
     ),
   ];
 

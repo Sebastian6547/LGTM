@@ -46,7 +46,7 @@ class _HomeShellState extends State<HomeShell> {
         activeMember: widget.activeMember,
         onXpUpdated: _onQuestXpUpdated,
       ),
-      PartyScreen(onXpUpdated: _onQuestXpUpdated),
+      const PartyScreen(),
       RankingsScreen(activeMember: widget.activeMember),
       ProfileScreen(activeMember: widget.activeMember),
     ];
