@@ -202,25 +202,6 @@ class _MemberTile extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.border),
-                            borderRadius: BorderRadius.circular(7),
-                          ),
-                          child: Text(
-                            member.rank,
-                            style: const TextStyle(
-                              color: AppColors.textMain,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
                         const SizedBox(width: 6),
                         Text(
                           'LVL ${member.level}',

@@ -261,7 +261,7 @@ class MockData {
     ),
     Achievement(
       title: 'Rank Up!',
-      subtitle: 'Reach D-Rank',
+      subtitle: 'Reach Level 10',
       icon: Icons.keyboard_arrow_up,
       color: Color(0xFFFFDB4D),
     ),
@@ -441,7 +441,7 @@ class MockData {
     final hasSevenDayStreak = profile.streakDays >= 7;
     final isSpeedRunner = completedToday >= 3;
     final isPerfectWeek = completedToday >= 7;
-    final hasRankedUp = profile.rank.toUpperCase() != 'E';
+    final hasRankedUp = profile.level >= 10;
     final isSentinel = profile.questsDone >= 30;
 
     // Team player: user contributed at least one task and no one is overloaded
@@ -487,7 +487,7 @@ class MockData {
       ),
       Achievement(
         title: 'Rank Up!',
-        subtitle: 'Reach D-Rank or above',
+        subtitle: 'Reach Level 10 or above',
         icon: Icons.keyboard_arrow_up,
         color: const Color(0xFFFFDB4D),
         unlocked: hasRankedUp,

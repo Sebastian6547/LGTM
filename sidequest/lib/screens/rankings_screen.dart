@@ -82,7 +82,7 @@ class RankingsScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${player.rank}-Rank • LVL ${player.level}',
+                        'LVL ${player.level}',
                         style: const TextStyle(
                           color: AppColors.textFaint,
                           fontSize: 12,

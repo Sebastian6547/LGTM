@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profile = MockData.profileForMemberUpdated(activeMember);
-    final toNextRank = profile.goalXp - profile.currentXp;
+    final toNextLevel = profile.goalXp - profile.currentXp;
 
     return ListView(
       children: [
@@ -47,29 +47,9 @@ class ProfileScreen extends StatelessWidget {
                 style: const TextStyle(color: AppColors.neonBlue, fontSize: 17),
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.neonBlue),
-                    ),
-                    child: Text(
-                      '${profile.rank}-Rank',
-                      style: const TextStyle(
-                        color: AppColors.textMain,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Level ${profile.level}',
-                    style: const TextStyle(color: AppColors.textMuted),
-                  ),
-                ],
+              Text(
+                'Level ${profile.level}',
+                style: const TextStyle(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -81,7 +61,7 @@ class ProfileScreen extends StatelessWidget {
               Row(
                 children: [
                   const Text(
-                    'RANK PROGRESSION',
+                    'LEVEL PROGRESSION',
                     style: TextStyle(
                       color: AppColors.textMuted,
                       letterSpacing: 2,
@@ -90,7 +70,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '$toNextRank XP to C-Rank',
+                    '$toNextLevel XP to next level',
                     style: const TextStyle(
                       color: AppColors.neonBlue,
                       fontSize: 12,
@@ -115,18 +95,6 @@ class ProfileScreen extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _RankChip(rank: 'E'),
-                  _RankChip(rank: 'D', active: true),
-                  _RankChip(rank: 'C'),
-                  _RankChip(rank: 'B'),
-                  _RankChip(rank: 'A'),
-                  _RankChip(rank: 'S'),
                 ],
               ),
             ],
@@ -241,37 +209,6 @@ class ProfileScreen extends StatelessWidget {
       case QuestDifficulty.epic:
         return const Color(0xFFFFD24A);
     }
-  }
-}
-
-class _RankChip extends StatelessWidget {
-  const _RankChip({required this.rank, this.active = false});
-
-  final String rank;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: active ? AppColors.neonBlue : AppColors.border,
-        ),
-        color: active ? AppColors.neonBlue.withValues(alpha: 0.15) : AppColors.panelAlt,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        rank,
-        style: TextStyle(
-          color: active ? AppColors.neonBlue : AppColors.textFaint,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
-      ),
-    );
   }
 }
 
