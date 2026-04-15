@@ -6,24 +6,44 @@ import '../models/sidequest_models.dart';
 import '../widgets/neon_panel.dart';
 import '../widgets/xp_bar.dart';
 
-class PartyScreen extends StatelessWidget {
-  const PartyScreen({super.key});
+class PartyScreen extends StatefulWidget {
+  const PartyScreen({super.key, this.onXpUpdated});
 
+  final VoidCallback? onXpUpdated;
+
+  @override
+  State<PartyScreen> createState() => _PartyScreenState();
+}
+
+class _PartyScreenState extends State<PartyScreen> {
   int _fairnessScore(List<int> workloads) {
-    final average = workloads.reduce((a, b) => a + b) / workloads.length;
-    final variance = workloads
-            .map((value) => (value - average) * (value - average))
-            .reduce((a, b) => a + b) /
-        workloads.length;
-    final normalized = (variance / 20).clamp(0, 1);
-    final score = ((1 - normalized) * 100).round();
-    return score.clamp(0, 100);
+    if (workloads.isEmpty || workloads.every((value) => value == 0)) {
+      return 100;
+    }
+
+    final n = workloads.length.toDouble();
+    final sum = workloads.fold<double>(0, (acc, value) => acc + value);
+    final sumSquares = workloads.fold<double>(
+      0,
+      (acc, value) => acc + (value * value),
+    );
+
+    if (sumSquares == 0) {
+      return 100;
+    }
+
+    // Jain's Fairness Index: J = (sum(x)^2) / (n * sum(x^2))
+    final jain = ((sum * sum) / (n * sumSquares)).clamp(0, 1);
+    return (jain * 100).round();
   }
 
   @override
   Widget build(BuildContext context) {
     final members = MockData.roommates;
-    final fairness = _fairnessScore(members.map((m) => m.weeklyQuests).toList());
+    final completedCounts = MockData.completedQuestCountByMember();
+    final weightedWorkloads = MockData.completedWeightedWorkloadByMember();
+    final fairness = _fairnessScore(weightedWorkloads.values.toList());
+    final maxWeighted = weightedWorkloads.values.fold<int>(0, (a, b) => a > b ? a : b);
 
     return ListView(
       children: [
@@ -39,7 +59,14 @@ class PartyScreen extends StatelessWidget {
             ),
           ),
         ),
-        ...members.map((member) => _MemberTile(member: member)),
+        ...members.map((member) {
+          final liveProfile = MockData.profileForMemberUpdated(member.name);
+          return _MemberTile(
+            member: member,
+            profile: liveProfile,
+            completedCount: completedCounts[member.name] ?? 0,
+          );
+        }),
         const SizedBox(height: 20),
         const Text(
           'PARTY BALANCE',
@@ -61,11 +88,11 @@ class PartyScreen extends StatelessWidget {
                   const Icon(Icons.tune, color: AppColors.neonGreen, size: 16),
                   const SizedBox(width: 6),
                   const Text(
-                    'FAIRNESS INDEX',
+                    'FAIRNESS INDEX (COUNT + DIFFICULTY)',
                     style: TextStyle(
                       color: AppColors.textMuted,
-                      letterSpacing: 2.4,
-                      fontSize: 11,
+                      letterSpacing: 1.4,
+                      fontSize: 10,
                     ),
                   ),
                   const Spacer(),
@@ -103,14 +130,16 @@ class PartyScreen extends StatelessWidget {
                       ),
                       Expanded(
                         child: XpBar(
-                          progress: member.weeklyQuests / 8,
+                          progress: maxWeighted == 0
+                              ? 0
+                              : (weightedWorkloads[member.name] ?? 0) / maxWeighted,
                           color: member.accent,
                           height: 3,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${member.weeklyQuests}',
+                        '${completedCounts[member.name] ?? 0}',
                         style: TextStyle(
                           color: member.accent,
                           fontSize: 21,
@@ -119,13 +148,6 @@ class PartyScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-              ),
-              const Text(
-                'Workload is reasonably balanced across the party.',
-                style: TextStyle(
-                  color: AppColors.textFaint,
-                  fontSize: 12,
                 ),
               ),
             ],
@@ -138,9 +160,15 @@ class PartyScreen extends StatelessWidget {
 }
 
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member});
+  const _MemberTile({
+    required this.member,
+    required this.profile,
+    required this.completedCount,
+  });
 
   final RoommateStats member;
+  final ProfileStats profile;
+  final int completedCount;
 
   @override
   Widget build(BuildContext context) {
@@ -204,8 +232,11 @@ class _MemberTile extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      '${member.role} • ${member.weeklyQuests} quests this week',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+                      '${member.role} • $completedCount completed',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -218,7 +249,7 @@ class _MemberTile extends StatelessWidget {
                     size: 18,
                   ),
                   Text(
-                    ' ${member.streak}',
+                    ' ${profile.streakDays}',
                     style: const TextStyle(
                       color: AppColors.neonOrange,
                       fontWeight: FontWeight.w700,
@@ -234,13 +265,13 @@ class _MemberTile extends StatelessWidget {
             children: [
               Expanded(
                 child: XpBar(
-                  progress: member.currentXp / member.goalXp,
+                  progress: profile.currentXp / profile.goalXp,
                   color: member.accent,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
-                '${member.currentXp}/${member.goalXp}',
+                '${profile.currentXp}/${profile.goalXp}',
                 style: TextStyle(
                   color: member.accent,
                   fontWeight: FontWeight.w700,

@@ -12,25 +12,25 @@ class MockData {
   static const List<LoginAccount> loginAccounts = [
     LoginAccount(
       username: 'maya',
-      password: 'hunter12',
+      password: 'pass',
       memberName: 'Maya',
       roomId: roomId,
     ),
     LoginAccount(
       username: 'alex',
-      password: 'kitchen10',
+      password: 'pass',
       memberName: 'Alex',
       roomId: roomId,
     ),
     LoginAccount(
       username: 'sam',
-      password: 'rookie07',
+      password: 'pass',
       memberName: 'Sam',
       roomId: roomId,
     ),
     LoginAccount(
       username: 'jordan',
-      password: 'rookie05',
+      password: 'pass',
       memberName: 'Jordan',
       roomId: roomId,
     ),
@@ -287,6 +287,12 @@ class MockData {
   static final Map<String, int> _memberCurrentXp = {};
   static final Map<String, int> _memberTotalXp = {};
   static final Map<String, int> _memberQuestsDone = {};
+  static final Map<String, int> _memberStreakDays = {};
+  static final Map<String, DateTime> _lastQuestCompletionDay = {};
+
+  static DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
+  }
 
   static void _ensureMemberStatsInitialized() {
     if (_memberStatsInitialized) {
@@ -299,6 +305,9 @@ class MockData {
     }
     for (final entry in _questsDoneByMember.entries) {
       _memberQuestsDone[entry.key] = entry.value;
+    }
+    for (final member in roommates) {
+      _memberStreakDays[member.name] = member.streak;
     }
 
     // Initialize current XP based on profiles
@@ -315,6 +324,7 @@ class MockData {
     _ensureMemberStatsInitialized();
 
     final normalizedName = memberName.trim();
+    final today = _dateOnly(DateTime.now());
 
     // Add to lifetime total
     _memberTotalXp[normalizedName] =
@@ -327,6 +337,13 @@ class MockData {
     // Increment quests done
     _memberQuestsDone[normalizedName] =
         (_memberQuestsDone[normalizedName] ?? 0) + 1;
+
+    final lastCompletionDay = _lastQuestCompletionDay[normalizedName];
+    if (lastCompletionDay == null || !_dateOnly(lastCompletionDay).isAtSameMomentAs(today)) {
+      _memberStreakDays[normalizedName] =
+          (_memberStreakDays[normalizedName] ?? 0) + 1;
+      _lastQuestCompletionDay[normalizedName] = today;
+    }
   }
 
   /// Get current member stats
@@ -345,7 +362,7 @@ class MockData {
       goalXp: member.goalXp,
       totalXp: _memberTotalXp[normalizedName] ?? member.currentXp,
       questsDone: _memberQuestsDone[normalizedName] ?? member.weeklyQuests,
-      streakDays: member.streak,
+      streakDays: _memberStreakDays[normalizedName] ?? member.streak,
       memberSince: _memberSinceByMember[normalizedName] ?? 'Jan 2026',
     );
   }
@@ -372,5 +389,116 @@ class MockData {
   static List<Quest> get upcomingQuests {
     ensureQuestStateInitialized();
     return _upcomingQuestState;
+  }
+
+  static List<Quest> get allQuests {
+    ensureQuestStateInitialized();
+    return [..._todaysQuestState, ..._upcomingQuestState];
+  }
+
+  static int _difficultyWeight(QuestDifficulty difficulty) {
+    return difficulty.index + 1;
+  }
+
+  static Map<String, int> completedQuestCountByMember() {
+    final counts = <String, int>{
+      for (final member in roommates) member.name: 0,
+    };
+
+    for (final quest in allQuests) {
+      final assignee = quest.assignee?.trim();
+      if (!quest.isComplete || assignee == null || assignee.isEmpty) {
+        continue;
+      }
+      counts[assignee] = (counts[assignee] ?? 0) + 1;
+    }
+
+    return counts;
+  }
+
+  static Map<String, int> completedWeightedWorkloadByMember() {
+    final scores = <String, int>{
+      for (final member in roommates) member.name: 0,
+    };
+
+    for (final quest in allQuests) {
+      final assignee = quest.assignee?.trim();
+      if (!quest.isComplete || assignee == null || assignee.isEmpty) {
+        continue;
+      }
+      scores[assignee] =
+          (scores[assignee] ?? 0) + _difficultyWeight(quest.difficulty);
+    }
+
+    return scores;
+  }
+
+  static List<Achievement> achievementsForMember(String memberName) {
+    final profile = profileForMemberUpdated(memberName);
+    final completedCounts = completedQuestCountByMember();
+
+    final completedToday = completedCounts[memberName] ?? 0;
+    final hasSevenDayStreak = profile.streakDays >= 7;
+    final isSpeedRunner = completedToday >= 3;
+    final isPerfectWeek = completedToday >= 7;
+    final hasRankedUp = profile.rank.toUpperCase() != 'E';
+    final isSentinel = profile.questsDone >= 30;
+
+    // Team player: user contributed at least one task and no one is overloaded
+    // by more than 2 completed tasks compared to the rest.
+    final counts = completedCounts.values.toList();
+    final hasAnyCompletions = counts.any((value) => value > 0);
+    final minCompleted = hasAnyCompletions
+        ? counts.reduce((a, b) => a < b ? a : b)
+        : 0;
+    final maxCompleted = hasAnyCompletions
+        ? counts.reduce((a, b) => a > b ? a : b)
+        : 0;
+    final isTeamPlayer = completedToday > 0 && (maxCompleted - minCompleted) <= 2;
+
+    return [
+      Achievement(
+        title: '7-Day Streak',
+        subtitle: 'Complete quests 7 days in a row',
+        icon: Icons.local_fire_department,
+        color: const Color(0xFFFFC940),
+        unlocked: hasSevenDayStreak,
+      ),
+      Achievement(
+        title: 'Speed Runner',
+        subtitle: 'Clear 3 quests in the current day',
+        icon: Icons.schedule,
+        color: const Color(0xFFF8D219),
+        unlocked: isSpeedRunner,
+      ),
+      Achievement(
+        title: 'Team Player',
+        subtitle: 'Contribute while keeping party workload balanced',
+        icon: Icons.groups_2_outlined,
+        color: AppColors.neonGreen,
+        unlocked: isTeamPlayer,
+      ),
+      Achievement(
+        title: 'Perfect Week',
+        subtitle: 'Complete 7 quests in this cycle',
+        icon: Icons.star_border,
+        color: AppColors.neonPurple,
+        unlocked: isPerfectWeek,
+      ),
+      Achievement(
+        title: 'Rank Up!',
+        subtitle: 'Reach D-Rank or above',
+        icon: Icons.keyboard_arrow_up,
+        color: const Color(0xFFFFDB4D),
+        unlocked: hasRankedUp,
+      ),
+      Achievement(
+        title: 'Sentinel',
+        subtitle: 'Complete 30 quests total',
+        icon: Icons.emoji_events_outlined,
+        color: AppColors.neonBlue,
+        unlocked: isSentinel,
+      ),
+    ];
   }
 }

@@ -5,17 +5,31 @@ import '../data/mock_data.dart';
 import '../widgets/neon_panel.dart';
 
 class RankingsScreen extends StatelessWidget {
-  const RankingsScreen({super.key});
+  const RankingsScreen({super.key, required this.activeMember});
+
+  final String activeMember;
 
   @override
   Widget build(BuildContext context) {
+    final completedCounts = MockData.completedQuestCountByMember();
+    final weightedScores = MockData.completedWeightedWorkloadByMember();
+    final achievements = MockData.achievementsForMember(activeMember);
     final leaderboard = [...MockData.roommates]
-      ..sort((a, b) => b.weeklyQuests.compareTo(a.weeklyQuests));
+      ..sort((a, b) {
+        final bWeighted = weightedScores[b.name] ?? 0;
+        final aWeighted = weightedScores[a.name] ?? 0;
+        if (bWeighted != aWeighted) {
+          return bWeighted.compareTo(aWeighted);
+        }
+        final bCount = completedCounts[b.name] ?? 0;
+        final aCount = completedCounts[a.name] ?? 0;
+        return bCount.compareTo(aCount);
+      });
 
     return ListView(
       children: [
         const Text(
-          'WEEKLY LEADERBOARD',
+          'LIVE LEADERBOARD',
           style: TextStyle(
             color: AppColors.textMuted,
             letterSpacing: 3,
@@ -81,7 +95,7 @@ class RankingsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${player.weeklyQuests}',
+                      '${completedCounts[player.name] ?? 0}',
                       style: TextStyle(
                         color: player.accent,
                         fontSize: 33,
@@ -89,7 +103,7 @@ class RankingsScreen extends StatelessWidget {
                       ),
                     ),
                     const Text(
-                      'QUESTS',
+                      'DONE',
                       style: TextStyle(
                         color: AppColors.textFaint,
                         letterSpacing: 2,
@@ -103,8 +117,8 @@ class RankingsScreen extends StatelessWidget {
           );
         }),
         const SizedBox(height: 18),
-        const Text(
-          'ACHIEVEMENTS',
+        Text(
+          '${activeMember.toUpperCase()} ACHIEVEMENTS',
           style: TextStyle(
             color: AppColors.textMuted,
             letterSpacing: 3,
@@ -116,7 +130,7 @@ class RankingsScreen extends StatelessWidget {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: MockData.achievements.length,
+          itemCount: achievements.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             childAspectRatio: 1.2,
@@ -124,7 +138,7 @@ class RankingsScreen extends StatelessWidget {
             mainAxisSpacing: 8,
           ),
           itemBuilder: (context, index) {
-            final achievement = MockData.achievements[index];
+            final achievement = achievements[index];
             return Opacity(
               opacity: achievement.unlocked ? 1 : 0.3,
               child: NeonPanel(

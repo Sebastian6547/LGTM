@@ -769,8 +769,19 @@ class _QuestsScreenState extends State<QuestsScreen> {
       .where((quest) => quest.assignee == widget.activeMember && quest.isComplete)
       .fold<int>(0, (sum, quest) => sum + quest.rewardXp);
 
+    final completedCounts = MockData.completedQuestCountByMember();
+    final weightedScores = MockData.completedWeightedWorkloadByMember();
     final leaderboard = [...MockData.roommates]
-      ..sort((a, b) => b.weeklyQuests.compareTo(a.weeklyQuests));
+      ..sort((a, b) {
+        final bWeighted = weightedScores[b.name] ?? 0;
+        final aWeighted = weightedScores[a.name] ?? 0;
+        if (bWeighted != aWeighted) {
+          return bWeighted.compareTo(aWeighted);
+        }
+        final bCount = completedCounts[b.name] ?? 0;
+        final aCount = completedCounts[a.name] ?? 0;
+        return bCount.compareTo(aCount);
+      });
     final rankIndex = leaderboard.indexWhere((member) => member.name == widget.activeMember);
     final rankLabel = rankIndex >= 0 ? '#${rankIndex + 1}' : '-';
 
